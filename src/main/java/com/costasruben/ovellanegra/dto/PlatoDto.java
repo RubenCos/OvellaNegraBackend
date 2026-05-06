@@ -1,6 +1,7 @@
 package com.costasruben.ovellanegra.dto;
 
 import com.costasruben.ovellanegra.enums.CategoriaPlato;
+import com.costasruben.ovellanegra.enums.Responsable;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -14,4 +15,5 @@ public class PlatoDto {
     private CategoriaPlato categoria;
     private Boolean disponible;
     private String imagenUrl;
+    private Responsable responsable;   // ← nuevo
 }

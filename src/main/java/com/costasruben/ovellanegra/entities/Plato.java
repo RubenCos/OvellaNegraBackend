@@ -2,10 +2,14 @@ package com.costasruben.ovellanegra.entities;
 
 
 import com.costasruben.ovellanegra.enums.CategoriaPlato;
+import com.costasruben.ovellanegra.enums.Responsable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "platos")
@@ -30,8 +34,31 @@ public class Plato {
     private CategoriaPlato categoria;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean disponible = true;
 
-    /** URL relativa a la imagen del plato */
     private String imagenUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private Responsable responsable = Responsable.COCINA;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "plato", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<PlatoIngrediente> ingredientes = new ArrayList<>();
+
+    /**
+     * Solo en INSERT: si no se asignó responsable explícitamente,
+     * lo deriva de la categoría. En UPDATE nunca se toca el campo.
+     */
+    @PrePersist
+    private void prePersist() {
+        if (responsable == null) {
+            responsable = (categoria == CategoriaPlato.BEBIDA)
+                    ? Responsable.BARRA
+                    : Responsable.COCINA;
+        }
+    }
 }

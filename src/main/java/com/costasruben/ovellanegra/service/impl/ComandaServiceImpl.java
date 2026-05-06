@@ -6,6 +6,7 @@ import com.costasruben.ovellanegra.dto.LineaComandaDto;
 import com.costasruben.ovellanegra.enums.EstadoComanda;
 import com.costasruben.ovellanegra.enums.EstadoLinea;
 import com.costasruben.ovellanegra.enums.EstadoMesa;
+import com.costasruben.ovellanegra.enums.Responsable;
 import com.costasruben.ovellanegra.exception.RestauranteException;
 import com.costasruben.ovellanegra.service.ComandaService;
 import com.costasruben.ovellanegra.service.InventarioService;
@@ -54,7 +55,10 @@ public class ComandaServiceImpl implements ComandaService {
         }
 
         Comanda saved = comandaRepository.save(comanda);
-        if (mesa.getEstado() == EstadoMesa.LIBRE) { mesa.setEstado(EstadoMesa.OCUPADA); mesaRepository.save(mesa); }
+        if (mesa.getEstado() == EstadoMesa.LIBRE) {
+            mesa.setEstado(EstadoMesa.OCUPADA);
+            mesaRepository.save(mesa);
+        }
 
         ComandaDto dto = toDto(saved);
         messagingTemplate.convertAndSend("/topic/cocina", dto);
@@ -133,18 +137,30 @@ public class ComandaServiceImpl implements ComandaService {
 
     private ComandaDto toDto(Comanda c) {
         ComandaDto dto = new ComandaDto();
-        dto.setId(c.getId()); dto.setMesaId(c.getMesa().getId());
-        dto.setMesaNumero(c.getMesa().getNumero()); dto.setFechaHora(c.getFechaHora());
-        dto.setEstado(c.getEstado()); dto.setNotas(c.getNotas());
-        dto.setLineas(c.getLineas() == null ? List.of() : c.getLineas().stream().map(this::lineaToDto).toList());
+        dto.setId(c.getId());
+        dto.setMesaId(c.getMesa().getId());
+        dto.setMesaNumero(c.getMesa().getNumero());
+        dto.setFechaHora(c.getFechaHora());
+        dto.setEstado(c.getEstado());
+        dto.setNotas(c.getNotas());
+        dto.setLineas(c.getLineas() == null ? List.of() :
+                c.getLineas().stream().map(this::lineaToDto).toList());
         return dto;
     }
+
     private LineaComandaDto lineaToDto(LineaComanda l) {
         LineaComandaDto dto = new LineaComandaDto();
-        dto.setId(l.getId()); dto.setPlatoId(l.getPlato().getId());
-        dto.setPlatoNombre(l.getPlato().getNombre()); dto.setCantidad(l.getCantidad());
-        dto.setPrecioUnitario(l.getPrecioUnitario()); dto.setObservaciones(l.getObservaciones());
+        dto.setId(l.getId());
+        dto.setPlatoId(l.getPlato().getId());
+        dto.setPlatoNombre(l.getPlato().getNombre());
+        dto.setCantidad(l.getCantidad());
+        dto.setPrecioUnitario(l.getPrecioUnitario());
+        dto.setObservaciones(l.getObservaciones());
         dto.setEstado(l.getEstado());
+        // Hereda el responsable del plato para que el frontend pueda filtrar
+        dto.setResponsable(l.getPlato().getResponsable() != null
+                ? l.getPlato().getResponsable()
+                : Responsable.COCINA);
         return dto;
     }
 }

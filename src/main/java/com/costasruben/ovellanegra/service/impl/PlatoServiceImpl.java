@@ -1,15 +1,15 @@
 package com.costasruben.ovellanegra.service.impl;
 
-
 import com.costasruben.ovellanegra.dto.PlatoDto;
 import com.costasruben.ovellanegra.entities.Plato;
 import com.costasruben.ovellanegra.enums.CategoriaPlato;
+import com.costasruben.ovellanegra.enums.Responsable;
 import com.costasruben.ovellanegra.repository.PlatoRepository;
 import com.costasruben.ovellanegra.service.PlatoService;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -44,6 +44,10 @@ public class PlatoServiceImpl implements PlatoService {
                 .categoria(dto.getCategoria())
                 .disponible(dto.getDisponible() != null ? dto.getDisponible() : true)
                 .imagenUrl(dto.getImagenUrl())
+                // Si el frontend envía responsable explícito, se usa; si no, @PrePersist lo deriva
+                .responsable(dto.getResponsable() != null
+                        ? dto.getResponsable()
+                        : (dto.getCategoria() == CategoriaPlato.BEBIDA ? Responsable.BARRA : Responsable.COCINA))
                 .build();
         return toDto(platoRepository.save(plato));
     }
@@ -57,6 +61,9 @@ public class PlatoServiceImpl implements PlatoService {
         plato.setPrecio(dto.getPrecio());
         plato.setCategoria(dto.getCategoria());
         plato.setImagenUrl(dto.getImagenUrl());
+        if (dto.getResponsable() != null) {
+            plato.setResponsable(dto.getResponsable());
+        }
         return toDto(platoRepository.save(plato));
     }
 
@@ -81,7 +88,7 @@ public class PlatoServiceImpl implements PlatoService {
                 .orElseThrow(() -> new EntityNotFoundException("Plato no encontrado: " + id));
     }
 
-    private PlatoDto toDto(Plato p) {
+    public PlatoDto toDto(Plato p) {
         PlatoDto dto = new PlatoDto();
         dto.setId(p.getId());
         dto.setNombre(p.getNombre());
@@ -90,6 +97,7 @@ public class PlatoServiceImpl implements PlatoService {
         dto.setCategoria(p.getCategoria());
         dto.setDisponible(p.getDisponible());
         dto.setImagenUrl(p.getImagenUrl());
+        dto.setResponsable(p.getResponsable());
         return dto;
     }
 }
